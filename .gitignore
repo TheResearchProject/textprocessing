@@ -1,0 +1,7 @@
+__pycache__
+venv
+user_interface/app/bower_components
+*.pyc
+user_interface/bower
+text_processing.fcgi
+text_processing.wsgi

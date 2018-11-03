@@ -1,0 +1,1 @@
+Stemmer -> Lemmatizer -> Stop Words

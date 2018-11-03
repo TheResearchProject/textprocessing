@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html lang="en" ng-app="myApp" class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html lang="en" ng-app="myApp" class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html lang="en" ng-app="myApp" class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html lang="en" ng-app="myApp" class="no-js"> <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>My AngularJS App</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/normalize.css">
+  <link rel="stylesheet" href="bower_components/html5-boilerplate/dist/css/main.css">
+  <link rel="stylesheet" href="bower_components/angular-material/angular-material.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="bower_components/html5-boilerplate/dist/js/vendor/modernizr-2.8.3.min.js"></script>
+</head>
+<body ng-controller="DeController" ng-cloak>
+  <div layout="row" layout-align="center start" class="mainDiv" ng-show="(error_text != '')">
+    <div>
+      There was an error while processing your request: {{ error_text }}
+    </div>
+  </div>
+  <div layout="row" layout-align="center start" ng-show="callback_ok">
+    <canvas id="word_cloud"></canvas>
+    <div id="word_cloud_div"></div>
+  </div>
+  <div layout="row" layout-align="center start" class="mainDiv">
+    <div class="my-column" flex>
+      <form ng-upload="callback(content)" action="/">
+        <strong>Language:</strong>
+        
+        <select name="language" ng-change="onChangeLanguage()" ng-model="language">
+          <option value="english">English</option>
+          <option value="dutch">Dutch</option>
+        </select><br>       
+        <br>
+        <strong>Upload options:</strong><br>      
+        <input ng-model="upload_option" 
+               type="radio" 
+               name="upload_option" 
+               value="text_field"/>
+               Text Field<br>     
+        <div ng-show="(upload_option == 'text_field')">
+          <textarea name="upload_textarea" 
+                    rows="4"></textarea>        
+        </div>
+        <input ng-model="upload_option" 
+               type="radio" 
+               name="upload_option" 
+               value="url"/>URL<br>
+        <div ng-show="(upload_option == 'url')">           
+          <input type="text" 
+                 id="upload-url" 
+                 name="upload_url"/><br>     
+        </div>
+        
+        <input ng-model="upload_option" 
+               type="radio" 
+               name="upload_option" 
+               value="file"/>Upload File<br>
+        <div ng-show="(upload_option == 'file')">       
+          <input type="file"  name="upload_file"/><br> 
+        </div>
+        <br>
+        <strong>Processing options:</strong><br>      
+        
+        Stemmer: 
+        <input ng-model="stemmer"
+               type="radio" 
+               name="stemmer" 
+               value="porter"
+               ng-disabled="(language == 'dutch')"
+               checked/>Porter
+        <input ng-model="stemmer"
+               type="radio" 
+               name="stemmer" 
+               value="snowball"/>Snowball
+        <input ng-model="stemmer"
+               type="radio" 
+               name="stemmer" 
+               value="no_stemmer"/>No Stemmer<br>
+        
+        Lemmatizer:                                       
+        <input ng-model="lemmatizer"
+               type="radio" 
+               name="lemmatizer" 
+               value="lemmatizer_on" checked/>On   
+        <input ng-model="lemmatizer"
+               type="radio" 
+               name="lemmatizer" 
+               value="lemmatizer_off"/>Off<br>
+        
+        Stopwords: <br>
+        <input ng-model="stopwords"
+               type="radio" 
+               name="stopwords" 
+               value="our_stopwords" checked/>Use ours<br>
+        <input ng-model="stopwords"
+               type="radio" 
+               name="stopwords" 
+               value="custom_stopwords"/>Send yours<br>
+        <div ng-show="(stopwords == 'custom_stopwords')">       
+          <input type="file"  name="custom_stopword_file"/><br> 
+        </div>               
+        <input ng-model="stopwords" 
+               type="radio" 
+               name="stopwords" 
+               value="no_stopwords"/>Don't use<br>
+               
+        Ignore first N results: 
+        <input type="number"
+               class="two-number"
+               name="ignore_results_amount"
+               value="10"/><br>
+               
+        Exclude vowels?                                       
+        <input type="radio" 
+               name="exclude_vowels" 
+               value="exclude_vowels_yes"/>On   
+        <input type="radio" 
+               name="exclude_vowels" 
+               value="exclude_vowels_no" checked/>Off<br>               
+               
+        <input type="submit" value="Perform"/>               
+      </form> 
+      <div id="chart1" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+      <div id="chart2" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+      <div id="chart3" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+    </div>
+    <div class="my-column" flex>
+      Resulting Text:<br>
+      <textarea ng-model="resulting_text" 
+                rows="4" 
+                disabled></textarea>
+      <input type="button" 
+             value="Download as text" 
+             ng-click="saveTextResult()"/><br><br>   
+      <table>
+        <thead>
+          <th></th>
+          <th>Input Text</th>
+          <th>Output Text</th>  
+        <thead>      
+        <tbody>
+          <tr>
+            <td>Word Count</td>
+            <td>{{ input_text_word_count }}</td>
+            <td>{{ output_text_word_count }}</td>
+          </tr>
+          <tr>
+            <td>Character Count</td>
+            <td>{{ input_text_char_count }}</td>
+            <td>{{ output_text_char_count }}</td>
+          </tr>          
+        </tbody>      
+      </table>
+      <br><br>
+      <table ng-show="callback_ok">
+        <thead>
+          <th>#</th>
+          <th>Frequency</th>
+          <th>Word</th>  
+        <thead>
+        <tbody>
+          <tr ng-repeat='line in results'>
+            <td>{{ $index + 1 }}</td>
+            <td>{{ line[0] }}</td>
+            <td>{{ line[1] }}</td>
+          </tr>
+        </tbody>
+      </table>   
+    </div>
+  </div>
+    
+ 
+
+  <!-- In production use:
+  <script src="//ajax.googleapis.com/ajax/libs/angularjs/x.x.x/angular.min.js"></script>
+  -->
+  <script src="bower_components/angular/angular.js"></script>
+  <script src="bower_components/angular-animate/angular-animate.js"></script>
+  <script src="bower_components/angular-aria/angular-aria.js"></script>
+  <script src="bower_components/angular-messages/angular-messages.js"></script>
+  <script src="bower_components/angular-route/angular-route.js"></script>
+  <script src="bower_components/angular-material/angular-material.js"></script>
+  <script src="bower_components/ngUpload/ng-upload.js"></script>
+  <script src="bower_components/highcharts/highcharts.js"></script>
+  <script src="bower_components/highcharts/modules/exporting.js"></script>
+  <script src="bower_components/FileSaver.js/FileSaver.js"></script>
+  <script src="bower_components/wordcloud2.js/src/wordcloud2.js"></script>
+  <script src="app.js"></script>
+  <script src="components/version/version.js"></script>
+  <script src="components/version/version-directive.js"></script>
+  <script src="components/version/interpolate-filter.js"></script>
+  
+</body>
+</html>
